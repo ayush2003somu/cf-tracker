@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Backend service for Codeforces DSA Profile & Gap Analyzer",
-  "main": "src/index.js",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
     "test:sprint1": "node src/testSprint1.js",
-    "test:sprint2-3": "node src/testSprint2And3.js"
+    "test:sprint2-3": "node src/testSprint2And3.js",
+    "test:api": "node src/testSprint3Api.js"
   },
   "keywords": [
     "codeforces",
@@ -18,7 +21,9 @@
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^2.32.0",
+    "cors": "^2.8.5",
     "dotenv": "^18.0.9",
+    "express": "^4.21.2",
     "firebase-admin": "^14.5.0"
   }
 }
