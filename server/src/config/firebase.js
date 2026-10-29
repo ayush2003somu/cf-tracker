@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -8,8 +9,7 @@ dotenv.config();
 
 /**
  * In-memory fallback Firestore mock.
- * Guarantees that the app, cache-aside logic, and test suites run smoothly
- * even before the developer connects their real Firebase service account credentials.
+ * Used if credentials are not provided or during offline testing.
  */
 class InMemoryFirestoreMock {
   constructor() {
@@ -42,31 +42,29 @@ let db = null;
 let isRealFirestore = false;
 
 try {
-  // Check if credentials are provided via string or path
   let credential = null;
 
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     const parsedKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    credential = admin.credential.cert(parsedKey);
+    credential = cert(parsedKey);
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
     const keyPath = path.resolve(process.cwd(), process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
     if (fs.existsSync(keyPath)) {
       const fileContent = fs.readFileSync(keyPath, 'utf8');
       const parsedKey = JSON.parse(fileContent);
-      credential = admin.credential.cert(parsedKey);
+      credential = cert(parsedKey);
     }
   }
 
   if (credential) {
-    if (!admin.apps.length) {
-      admin.initializeApp({ credential });
-    }
-    db = admin.firestore();
+    const apps = getApps();
+    const app = apps.length > 0 ? apps[0] : initializeApp({ credential });
+    db = getFirestore(app);
     isRealFirestore = true;
     console.log('[Firestore] 🚀 Connected to live Firebase Firestore project.');
   } else {
     console.log('[Firestore] ℹ️  No Firebase credentials configured in .env.');
-    console.log('[Firestore] 💡 Falling back to in-memory Firestore cache store (ideal for local testing).');
+    console.log('[Firestore] 💡 Falling back to in-memory Firestore cache store.');
     db = new InMemoryFirestoreMock();
   }
 } catch (error) {

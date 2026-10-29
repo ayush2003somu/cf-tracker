@@ -94,13 +94,51 @@ You MUST return ONLY a JSON object with this exact structure:
   ]
 }`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
+    // Use the active high-speed Gemini models with automatic retry on transient 503 spikes
+    const candidateModels = [
+      'gemini-3.1-flash-lite',
+      'gemini-3.5-flash',
+      'gemini-flash-latest',
+      'gemini-3.1-flash-lite-preview'
+    ];
+    let lastError = null;
+    let response = null;
+    let successfulModel = null;
+
+    for (const modelName of candidateModels) {
+      // Attempt up to 2 times per model with backoff on 503 (high demand) spikes
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json'
+            }
+          });
+          successfulModel = modelName;
+          break; // Model succeeded
+        } catch (err) {
+          lastError = err;
+          const is503 = err.status === 503 || err.message?.includes('503') || err.message?.includes('high demand');
+          
+          if (is503 && attempt === 1) {
+            console.log(`[AiService] ⏳ Model ${modelName} experiencing temporary traffic spike (503). Retrying in 1.5s...`);
+            await new Promise((res) => setTimeout(res, 1500));
+            continue;
+          }
+          break; // Move to next candidate model
+        }
       }
-    });
+
+      if (response) {
+        break; // Stop iterating models once we have a response
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error('All Gemini model candidates failed.');
+    }
 
     const rawText = response.text;
     const parsed = JSON.parse(rawText);
@@ -109,7 +147,7 @@ You MUST return ONLY a JSON object with this exact structure:
       verdictSummary: parsed.verdictSummary || 'Profile analysis complete.',
       weakestAreas: Array.isArray(parsed.weakestAreas) ? parsed.weakestAreas : [],
       recommendedRoadmap: Array.isArray(parsed.recommendedRoadmap) ? parsed.recommendedRoadmap : [],
-      generatedBy: 'Google Gemini 2.5 Flash'
+      generatedBy: `Google Gemini (${successfulModel})`
     };
   } catch (error) {
     console.warn(`[AiService] Gemini API call failed (${error.message}). Falling back to heuristic diagnosis.`);
