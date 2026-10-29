@@ -1,0 +1,24 @@
+{
+  "name": "cf-tracker-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend service for Codeforces DSA Profile & Gap Analyzer",
+  "main": "src/index.js",
+  "scripts": {
+    "test:sprint1": "node src/testSprint1.js",
+    "test:sprint2-3": "node src/testSprint2And3.js"
+  },
+  "keywords": [
+    "codeforces",
+    "dsa",
+    "tracker",
+    "gap-analyzer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/genai": "^2.32.0",
+    "dotenv": "^18.0.9",
+    "firebase-admin": "^14.5.0"
+  }
+}
