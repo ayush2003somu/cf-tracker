@@ -42,8 +42,12 @@ export async function getCachedProfile(handle) {
     const now = Date.now();
     const ageMs = now - (data.updatedAt || 0);
 
-    // If cache has expired (older than 6 hours), treat as cache miss
+    // If cache has expired (older than 6 hours), proactively delete it and treat as cache miss
     if (ageMs > CACHE_TTL_MS) {
+      console.log(`[CacheService] 🧹 Cache expired for "${handle}" (${Math.round(ageMs / 60000)}m old). Evicting from Firestore...`);
+      await docRef.delete().catch((err) => {
+        console.warn(`[CacheService] Error deleting stale document for ${handle}:`, err.message);
+      });
       return null;
     }
 
@@ -63,6 +67,8 @@ export async function getCachedProfile(handle) {
 
 /**
  * Saves or updates profile metrics and AI diagnostic results to Firestore.
+ * Adds an `expiresAt` timestamp so Firestore's native TTL policy can automatically
+ * purge the document after 6 hours.
  * 
  * @param {string} handle - Codeforces handle
  * @param {Object} profileData - Normalized DSA profile metrics
@@ -75,9 +81,13 @@ export async function saveProfileToCache(handle, profileData, aiDiagnosis = null
   }
 
   const docKey = getDocKey(handle);
+  const now = Date.now();
+  const expiresAt = new Date(now + CACHE_TTL_MS);
+
   const payload = {
     handle: handle.trim(),
-    updatedAt: Date.now(),
+    updatedAt: now,
+    expiresAt: expiresAt, // Native Firestore TTL timestamp (Date object)
     profile: profileData,
     aiDiagnosis: aiDiagnosis || null
   };
@@ -90,5 +100,47 @@ export async function saveProfileToCache(handle, profileData, aiDiagnosis = null
     console.error(`[CacheService] Failed to write cache for ${handle}:`, error.message);
     // Even if caching fails, return payload so user request succeeds
     return payload;
+  }
+}
+
+/**
+ * Sweeper / Janitor Utility:
+ * Scans the cf_profiles collection and deletes any documents older than 6 hours
+ * or whose `expiresAt` is in the past.
+ * 
+ * @returns {Promise<number>} - Count of deleted expired documents
+ */
+export async function purgeExpiredCache() {
+  try {
+    const now = Date.now();
+    const snapshot = await db.collection(COLLECTION_NAME).get();
+
+    if (snapshot.empty) {
+      return 0;
+    }
+
+    let purgedCount = 0;
+    const deletePromises = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const ageMs = now - (data.updatedAt || 0);
+      const isExpired = ageMs > CACHE_TTL_MS || (data.expiresAt && new Date(data.expiresAt) <= new Date(now));
+
+      if (isExpired) {
+        deletePromises.push(doc.ref.delete());
+        purgedCount++;
+      }
+    }
+
+    if (deletePromises.length > 0) {
+      await Promise.all(deletePromises);
+      console.log(`[CacheService] 🧹 Purged ${purgedCount} expired profile(s) from Firestore.`);
+    }
+
+    return purgedCount;
+  } catch (error) {
+    console.warn(`[CacheService] Error purging expired cache: ${error.message}`);
+    return 0;
   }
 }

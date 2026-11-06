@@ -1,5 +1,6 @@
 import app from './app.js';
 import dotenv from 'dotenv';
+import { purgeExpiredCache } from './services/cacheService.js';
 
 dotenv.config();
 
@@ -13,6 +14,15 @@ const server = app.listen(PORT, () => {
   console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
   console.log(`👤 Profile API : http://localhost:${PORT}/api/profile/:handle`);
   console.log('='.repeat(65));
+
+  // Run initial cache janitor sweep to remove any expired documents
+  purgeExpiredCache().catch(err => console.warn('[Janitor] Initial sweep error:', err.message));
+
+  // Run periodic janitor sweep every 1 hour
+  const JANITOR_INTERVAL_MS = 60 * 60 * 1000;
+  setInterval(() => {
+    purgeExpiredCache().catch(err => console.warn('[Janitor] Periodic sweep error:', err.message));
+  }, JANITOR_INTERVAL_MS);
 });
 
 // Graceful error handling for port in-use or socket errors

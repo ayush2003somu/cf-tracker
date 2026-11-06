@@ -31,7 +31,34 @@ class InMemoryFirestoreMock {
           set: async (data) => {
             this.storage.set(fullKey, JSON.parse(JSON.stringify(data)));
             return { writeTime: new Date() };
+          },
+          delete: async () => {
+            this.storage.delete(fullKey);
+            return { writeTime: new Date() };
           }
+        };
+      },
+      get: async () => {
+        const prefix = `${collectionName}/`;
+        const docs = [];
+        for (const [key, value] of this.storage.entries()) {
+          if (key.startsWith(prefix)) {
+            docs.push({
+              id: key.slice(prefix.length),
+              ref: {
+                delete: async () => {
+                  this.storage.delete(key);
+                  return { writeTime: new Date() };
+                }
+              },
+              data: () => JSON.parse(JSON.stringify(value))
+            });
+          }
+        }
+        return {
+          docs,
+          empty: docs.length === 0,
+          size: docs.length
         };
       }
     };
