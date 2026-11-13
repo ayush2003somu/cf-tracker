@@ -86,3 +86,64 @@ export const STANDARD_DSA_TOPICS = [
   'Strings',
   'Sorting & Searching'
 ];
+
+/**
+ * Metadata for each standard DSA topic:
+ * - cfTag: Primary tag used on Codeforces problemset filter
+ * - keyPatterns: Essential interview algorithms and patterns for this category
+ */
+export const TOPIC_METADATA = {
+  'Dynamic Programming': {
+    cfTag: 'dp',
+    keyPatterns: '1D/2D memoization, knapsack, subsets, state transitions'
+  },
+  'Graph Traversals (DFS/BFS)': {
+    cfTag: 'dfs and similar',
+    keyPatterns: 'Connected components, grid traversal, topological sort'
+  },
+  'Graphs': {
+    cfTag: 'graphs',
+    keyPatterns: 'Dijkstra, Bellman-Ford, minimum spanning tree, bipartite graphs'
+  },
+  'Trees': {
+    cfTag: 'trees',
+    keyPatterns: 'Lowest common ancestor (LCA), tree diameter, subtree queries'
+  },
+  'Data Structures': {
+    cfTag: 'data structures',
+    keyPatterns: 'Segment tree, Fenwick tree / BIT, heaps, monotonic stacks'
+  },
+  'Disjoint Set Union (DSU)': {
+    cfTag: 'dsu',
+    keyPatterns: 'Union by rank, path compression, dynamic connectivity'
+  },
+  'Binary Search': {
+    cfTag: 'binary search',
+    keyPatterns: 'Binary search on answer, upper/lower bound, predicates'
+  },
+  'Two Pointers & Sliding Window': {
+    cfTag: 'two pointers',
+    keyPatterns: 'Variable/fixed sliding window, subarray sums, two-sum variations'
+  },
+  'Bit Manipulation': {
+    cfTag: 'bitmasks',
+    keyPatterns: 'XOR tricks, subset bitmask DP, power-of-two manipulations'
+  },
+  'Greedy Algorithms': {
+    cfTag: 'greedy',
+    keyPatterns: 'Interval scheduling, exchange arguments, greedy choice property'
+  },
+  'Math & Number Theory': {
+    cfTag: 'math',
+    keyPatterns: 'GCD / Euclidean, prime sieve (Eratosthenes), modular arithmetic'
+  },
+  'Strings': {
+    cfTag: 'strings',
+    keyPatterns: 'Prefix function (KMP), rolling hash, trie construction'
+  },
+  'Sorting & Searching': {
+    cfTag: 'sortings',
+    keyPatterns: 'Custom comparators, coordinate compression, divide & conquer'
+  }
+};
+

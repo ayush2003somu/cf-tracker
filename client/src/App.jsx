@@ -4,6 +4,7 @@ import SearchBar from './components/SearchBar';
 import OverviewCards from './components/OverviewCards';
 import TopicBreakdown from './components/TopicBreakdown';
 import AiDiagnosticCard from './components/AiDiagnosticCard';
+import GapAnalysisCard from './components/GapAnalysisCard';
 import LoadingState from './components/LoadingState';
 import ErrorBanner from './components/ErrorBanner';
 import { fetchUserProfile, checkBackendHealth } from './services/api';
@@ -92,7 +93,12 @@ export default function App() {
               cacheMeta={cacheMeta}
             />
 
-            {/* 2. Grid Layout: Left is Topic Breakdown, Right is AI Coach */}
+            {/* 2. Resume-Booster Feature: DSA Gap Analysis & Readiness Engine */}
+            {profileData.gapAnalysis && (
+              <GapAnalysisCard gapAnalysis={profileData.gapAnalysis} />
+            )}
+
+            {/* 3. Grid Layout: Left is Topic Breakdown, Right is AI Coach */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
               {/* Topics Breakdown Table (spans 2 columns on desktop) */}
               <div className="lg:col-span-2">

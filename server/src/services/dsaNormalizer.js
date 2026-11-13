@@ -1,4 +1,104 @@
-import { TAG_TO_DSA_MAP, STANDARD_DSA_TOPICS } from '../constants/dsaTopics.js';
+import { TAG_TO_DSA_MAP, STANDARD_DSA_TOPICS, TOPIC_METADATA } from '../constants/dsaTopics.js';
+
+/**
+ * Calculates DSA Interview Readiness Index (0-100) and detects topic gaps.
+ * 
+ * Formula rationale (Explainable Heuristic):
+ * 1. Breadth Coverage (40%): Fraction of core 13 DSA topics with >= 5 problems solved.
+ *    - Solving 0-4 problems in a topic is statistically insufficient for interview pattern retention.
+ * 2. Depth Mastery (40%): Overall average rating normalized against 1600 benchmark (solid SWE medium/hard).
+ *    - If average is 1600+, candidate scores 100 on depth.
+ * 3. Volume Consistency (20%): Total unique solves normalized against 120 problems target.
+ * 
+ * Topic Classification:
+ * - CRITICAL_GAP: Solved < 5 problems (high interview failure risk)
+ * - DEVELOPING: Solved >= 5 problems, but average rating is below (candidate avg - 100) or below 1200
+ * - PROFICIENT: Solved >= 15 problems with rating on par or above average
+ */
+export function calculateGapAnalysis(topicBreakdown, totalUniqueSolved, overallAverageRating) {
+  const coreTopics = topicBreakdown.filter(t => t.isCoreDsaTopic);
+  const totalCore = coreTopics.length || STANDARD_DSA_TOPICS.length;
+
+  // 1. Breadth: Topics with >= 5 solves
+  const coveredTopicsCount = coreTopics.filter(t => t.solvedCount >= 5).length;
+  const breadthScore = Math.min(100, Math.round((coveredTopicsCount / totalCore) * 100));
+
+  // 2. Depth: Benchmarked against 1600 rating
+  const avgRating = overallAverageRating || 1000;
+  const depthScore = Math.min(100, Math.round((avgRating / 1600) * 100));
+
+  // 3. Volume: Benchmarked against 120 unique solves
+  const volumeScore = Math.min(100, Math.round((totalUniqueSolved / 120) * 100));
+
+  // Weighted Readiness Index
+  const readinessScore = Math.round((breadthScore * 0.40) + (depthScore * 0.40) + (volumeScore * 0.20));
+
+  let readinessTier = 'Early Stage (Fundamental Focus)';
+  if (readinessScore >= 80) readinessTier = 'Interview Ready (Advanced)';
+  else if (readinessScore >= 55) readinessTier = 'Competitive Intermediate';
+
+  // Topic classification and targeted practice recommendations
+  let criticalGapsCount = 0;
+  let developingCount = 0;
+  let proficientCount = 0;
+
+  const topicsAnalysis = coreTopics.map((topicStat) => {
+    const meta = TOPIC_METADATA[topicStat.topic] || { cfTag: 'implementation', keyPatterns: 'General patterns' };
+    let status = 'PROFICIENT';
+
+    if (topicStat.solvedCount < 5) {
+      status = 'CRITICAL_GAP';
+      criticalGapsCount++;
+    } else if (
+      topicStat.solvedCount < 15 || 
+      (topicStat.averageRating !== null && topicStat.averageRating < Math.max(1200, avgRating - 100))
+    ) {
+      status = 'DEVELOPING';
+      developingCount++;
+    } else {
+      proficientCount++;
+    }
+
+    // Recommended target difficulty bracket for this topic
+    const baseTarget = avgRating ? Math.round(avgRating / 100) * 100 : 1200;
+    const lowerBracket = Math.max(800, baseTarget - 100);
+    const upperBracket = baseTarget + 200;
+    const targetRatingBracket = `${lowerBracket}-${upperBracket}`;
+
+    // Direct Codeforces problemset filter URL
+    const practiceUrl = `https://codeforces.com/problemset?tags=${encodeURIComponent(meta.cfTag)}`;
+
+    return {
+      topic: topicStat.topic,
+      status, // 'CRITICAL_GAP' | 'DEVELOPING' | 'PROFICIENT'
+      solvedCount: topicStat.solvedCount,
+      averageRating: topicStat.averageRating,
+      maxRating: topicStat.maxRating,
+      cfTag: meta.cfTag,
+      keyPatterns: meta.keyPatterns,
+      targetRatingBracket,
+      practiceUrl
+    };
+  });
+
+  // Sort so CRITICAL_GAP appears first, then DEVELOPING, then PROFICIENT
+  const statusOrder = { 'CRITICAL_GAP': 0, 'DEVELOPING': 1, 'PROFICIENT': 2 };
+  topicsAnalysis.sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || a.solvedCount - b.solvedCount);
+
+  return {
+    readinessScore,
+    readinessTier,
+    scoreBreakdown: {
+      breadthScore,
+      depthScore,
+      volumeScore
+    },
+    criticalGapsCount,
+    developingCount,
+    proficientCount,
+    topicsAnalysis
+  };
+}
 
 /**
  * Normalizes raw Codeforces submissions into unique solved problems
@@ -140,12 +240,20 @@ export function normalizeUserSubmissions(submissions) {
     ? Math.round(ratingSum / totalRatedSolves)
     : null;
 
+  // 4. CALCULATE DSA GAP ANALYSIS & READINESS INDEX (Sprint 6 Feature)
+  const gapAnalysis = calculateGapAnalysis(
+    topicBreakdown,
+    uniqueSolvedMap.size,
+    overallAverageRating
+  );
+
   return {
     totalSubmissions: submissions.length,
     totalUniqueSolved: uniqueSolvedMap.size,
     totalRatedSolved: totalRatedSolves,
     overallAverageRating,
     overallMaxRating: overallMaxRating > 0 ? overallMaxRating : null,
-    topicBreakdown
+    topicBreakdown,
+    gapAnalysis
   };
 }
