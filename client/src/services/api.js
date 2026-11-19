@@ -6,7 +6,7 @@
  * In production, requests use VITE_API_BASE_URL.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 /**
  * Fetches user profile analytics, DSA breakdown, and AI coaching roadmap.
@@ -46,10 +46,18 @@ export async function fetchUserProfile(handle, forceRefresh = false) {
  */
 export async function checkBackendHealth() {
   try {
-    const res = await fetch(`${API_BASE}/health`);
-    if (!res.ok) return { status: 'offline' };
-    return await res.json();
-  } catch {
+    const url = `${API_BASE}/health`;
+    console.log('[HealthCheck] Checking backend health at:', url);
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn('[HealthCheck] Health check returned HTTP status:', res.status);
+      return { status: 'offline' };
+    }
+    const data = await res.json();
+    console.log('[HealthCheck] Server is online:', data);
+    return data;
+  } catch (err) {
+    console.error('[HealthCheck] Connection failed:', err);
     return { status: 'offline' };
   }
 }

@@ -20,11 +20,23 @@ export default function App() {
   const [aiDiagnosis, setAiDiagnosis] = useState(null);
   const [cacheMeta, setCacheMeta] = useState(null);
 
-  // Check backend server health on mount
+  // Check backend server health on mount & retry if server is waking up
   useEffect(() => {
-    checkBackendHealth().then((res) => {
-      setBackendOnline(res.status === 'online');
-    });
+    let intervalId;
+
+    const check = async () => {
+      const res = await checkBackendHealth();
+      const isOnline = res.status === 'online';
+      setBackendOnline(isOnline);
+      if (isOnline && intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+
+    check();
+    intervalId = setInterval(check, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // Main search handler
