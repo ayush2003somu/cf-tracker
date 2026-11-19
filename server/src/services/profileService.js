@@ -46,8 +46,8 @@ export async function getProfileWithDiagnosis(handle, forceRefresh = false) {
     }
   }
 
-  // 2. CACHE MISS: Queued fetch + Normalization + AI Analysis
-  console.log(`[ProfileService] Cache miss for "${cleanHandle}". Initiating queued fetch and AI analysis...`);
+  // 2. Cache miss: Queued fetch + Normalization + AI Analysis
+  console.log(`Analyzing profile for: ${cleanHandle}`);
 
   // Outbound call is throttled through the 2.1s request queue
   const rawSubmissions = await fetchUserSubmissions(cleanHandle);

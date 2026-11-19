@@ -33,18 +33,13 @@ function generateFallbackDiagnosis(handle, profile) {
       `Focus on structural pattern recognition in ${weakTopics[1] || 'Graph Traversals'} before attempting hard contest mashups.`,
       `Maintain a weekly rhythm of solving at least 3 problems at your target rating (${targetNextRating}+) without looking at editorial solutions for the first 30 minutes.`
     ],
-    generatedBy: 'heuristic-engine (Set GEMINI_API_KEY in .env for live Gemini output)'
+    generatedBy: 'Automated Diagnostic Assessment'
   };
 }
 
 /**
- * Single-call AI Diagnostic Coach
- * 
- * Feeds ONLY the aggregated summary object into Google Gemini (never individual questions).
- * 
- * @param {string} handle - Candidate handle
- * @param {Object} profile - Aggregated DSA profile from dsaNormalizer
- * @returns {Promise<Object>} - Structured JSON diagnostic
+ * Generates technical diagnostic assessment using Gemini LLM.
+ * Feeds only the aggregated profile metrics to keep latency and token costs minimal.
  */
 export async function generateAiDiagnosis(handle, profile) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -56,7 +51,7 @@ export async function generateAiDiagnosis(handle, profile) {
   try {
     const ai = new GoogleGenAI({ apiKey });
 
-    // Build a compact representation of the profile to minimize tokens and latency
+    // Compact summary payload
     const summaryPayload = {
       handle,
       totalSolved: profile.totalUniqueSolved,
@@ -78,12 +73,12 @@ export async function generateAiDiagnosis(handle, profile) {
         }))
     };
 
-    const prompt = `You are a Principal Software Engineer and elite competitive programming coach.
-Analyze this Codeforces candidate's aggregated DSA profile summary:
+    const prompt = `You are a senior technical interviewer and competitive programming mentor.
+Analyze this Codeforces user's aggregated DSA summary:
 ${JSON.stringify(summaryPayload, null, 2)}
 
-Provide an objective, actionable technical assessment.
-You MUST return ONLY a JSON object with this exact structure:
+Provide an objective assessment for software engineering interview readiness.
+Return ONLY valid JSON matching this exact structure:
 {
   "verdictSummary": "2 clear sentences summarizing their current level and problem-solving maturity for software engineering interviews.",
   "weakestAreas": ["Topic 1", "Topic 2", "Topic 3"],
@@ -94,7 +89,6 @@ You MUST return ONLY a JSON object with this exact structure:
   ]
 }`;
 
-    // Use the active high-speed Gemini models with automatic retry on transient 503 spikes
     const candidateModels = [
       'gemini-3.1-flash-lite',
       'gemini-3.5-flash',
@@ -103,10 +97,8 @@ You MUST return ONLY a JSON object with this exact structure:
     ];
     let lastError = null;
     let response = null;
-    let successfulModel = null;
 
     for (const modelName of candidateModels) {
-      // Attempt up to 2 times per model with backoff on 503 (high demand) spikes
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           response = await ai.models.generateContent({
@@ -116,28 +108,26 @@ You MUST return ONLY a JSON object with this exact structure:
               responseMimeType: 'application/json'
             }
           });
-          successfulModel = modelName;
-          break; // Model succeeded
+          break;
         } catch (err) {
           lastError = err;
           const is503 = err.status === 503 || err.message?.includes('503') || err.message?.includes('high demand');
           
           if (is503 && attempt === 1) {
-            console.log(`[AiService] ⏳ Model ${modelName} experiencing temporary traffic spike (503). Retrying in 1.5s...`);
             await new Promise((res) => setTimeout(res, 1500));
             continue;
           }
-          break; // Move to next candidate model
+          break;
         }
       }
 
       if (response) {
-        break; // Stop iterating models once we have a response
+        break;
       }
     }
 
     if (!response) {
-      throw lastError || new Error('All Gemini model candidates failed.');
+      throw lastError || new Error('All model candidates failed.');
     }
 
     const rawText = response.text;
@@ -147,10 +137,10 @@ You MUST return ONLY a JSON object with this exact structure:
       verdictSummary: parsed.verdictSummary || 'Profile analysis complete.',
       weakestAreas: Array.isArray(parsed.weakestAreas) ? parsed.weakestAreas : [],
       recommendedRoadmap: Array.isArray(parsed.recommendedRoadmap) ? parsed.recommendedRoadmap : [],
-      generatedBy: `Google Gemini (${successfulModel})`
+      generatedBy: 'AI Analysis'
     };
   } catch (error) {
-    console.warn(`[AiService] Gemini API call failed (${error.message}). Falling back to heuristic diagnosis.`);
+    console.warn(`LLM request failed (${error.message}). Using rule-based assessment fallback.`);
     return generateFallbackDiagnosis(handle, profile);
   }
 }

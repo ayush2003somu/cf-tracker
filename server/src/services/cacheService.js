@@ -42,11 +42,10 @@ export async function getCachedProfile(handle) {
     const now = Date.now();
     const ageMs = now - (data.updatedAt || 0);
 
-    // If cache has expired (older than 6 hours), proactively delete it and treat as cache miss
+    // If cache has expired (older than 6 hours), delete it and return null
     if (ageMs > CACHE_TTL_MS) {
-      console.log(`[CacheService] 🧹 Cache expired for "${handle}" (${Math.round(ageMs / 60000)}m old). Evicting from Firestore...`);
       await docRef.delete().catch((err) => {
-        console.warn(`[CacheService] Error deleting stale document for ${handle}:`, err.message);
+        console.warn(`Error deleting expired cache for ${handle}:`, err.message);
       });
       return null;
     }
@@ -135,12 +134,12 @@ export async function purgeExpiredCache() {
 
     if (deletePromises.length > 0) {
       await Promise.all(deletePromises);
-      console.log(`[CacheService] 🧹 Purged ${purgedCount} expired profile(s) from Firestore.`);
+      console.log(`Cleaned up ${purgedCount} expired cache record(s)`);
     }
 
     return purgedCount;
   } catch (error) {
-    console.warn(`[CacheService] Error purging expired cache: ${error.message}`);
+    console.warn(`Error purging expired cache: ${error.message}`);
     return 0;
   }
 }

@@ -31,12 +31,10 @@ function getStatusBadge(status) {
 }
 
 /**
- * GapAnalysisCard Component (Sprint 6 Resume-Booster Feature)
+ * GapAnalysisCard Component
  * 
- * Computes and renders:
- * - Mathematical Interview Readiness Index (0-100) with breadth, depth, and volume sub-scores.
- * - Gap classification (Critical, Developing, Proficient).
- * - Actionable Codeforces practice links with targeted rating brackets.
+ * Renders Interview Readiness Index (0-100), topic gap classifications,
+ * and Codeforces practice links with targeted rating brackets.
  */
 export default function GapAnalysisCard({ gapAnalysis }) {
   const [filter, setFilter] = useState('GAPS_ONLY'); // 'ALL' | 'GAPS_ONLY' | 'CRITICAL_ONLY'

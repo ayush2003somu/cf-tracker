@@ -40,15 +40,15 @@ export default function OverviewCards({ handle, profile, cacheMeta }) {
           </a>
         </div>
 
-        {/* Cache Freshness Metadata */}
+        {/* Cache Status */}
         <div className="flex items-center gap-1.5 text-xs">
           <Database className="h-3.5 w-3.5 text-slate-400" />
           {isCached ? (
             <span className="text-slate-400">
-              Cached <span className="font-medium text-slate-300">{cacheMeta.cacheAgeMinutes}m ago</span> in Firestore
+              Cached <span className="font-medium text-slate-300">{cacheMeta.cacheAgeMinutes}m ago</span>
             </span>
           ) : (
-            <span className="text-emerald-400 font-medium">Freshly fetched & cached</span>
+            <span className="text-emerald-400 font-medium">Live sync</span>
           )}
         </div>
       </div>

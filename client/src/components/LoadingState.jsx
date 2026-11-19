@@ -14,7 +14,7 @@ export default function LoadingState({ handle }) {
         Analyzing <span className="font-mono text-blue-400">"{handle}"</span>
       </div>
       <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-        Fetching submissions from Codeforces API, filtering non-AC verdicts, mapping tags into standard DSA buckets, and checking Firestore cache...
+        Fetching submissions and calculating topic mastery metrics...
       </p>
     </div>
   );

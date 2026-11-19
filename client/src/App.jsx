@@ -86,26 +86,24 @@ export default function App() {
         {/* Analyzed Profile View */}
         {!isLoading && profileData && (
           <div className="space-y-6">
-            {/* 1. Overview Metrics & Cache Details */}
+            {/* 1. Overview Metrics */}
             <OverviewCards
               handle={searchedHandle}
               profile={profileData}
               cacheMeta={cacheMeta}
             />
 
-            {/* 2. Resume-Booster Feature: DSA Gap Analysis & Readiness Engine */}
+            {/* 2. Gap Analysis & Readiness Index */}
             {profileData.gapAnalysis && (
               <GapAnalysisCard gapAnalysis={profileData.gapAnalysis} />
             )}
 
-            {/* 3. Grid Layout: Left is Topic Breakdown, Right is AI Coach */}
+            {/* 3. Topics Breakdown & Performance Review */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              {/* Topics Breakdown Table (spans 2 columns on desktop) */}
               <div className="lg:col-span-2">
                 <TopicBreakdown topics={profileData.topicBreakdown} />
               </div>
 
-              {/* Single-call AI Diagnostic Coach Card */}
               <div className="lg:col-span-1">
                 <AiDiagnosticCard aiDiagnosis={aiDiagnosis} />
               </div>
@@ -126,7 +124,7 @@ export default function App() {
               >
                 tourist
               </button>{' '}
-              to inspect solved topics and AI diagnostics.
+              to inspect solved topics and readiness analysis.
             </p>
           </div>
         )}

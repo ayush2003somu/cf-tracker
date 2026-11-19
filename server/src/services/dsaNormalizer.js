@@ -240,7 +240,7 @@ export function normalizeUserSubmissions(submissions) {
     ? Math.round(ratingSum / totalRatedSolves)
     : null;
 
-  // 4. CALCULATE DSA GAP ANALYSIS & READINESS INDEX (Sprint 6 Feature)
+  // 4. Calculate DSA topic gaps and interview readiness score
   const gapAnalysis = calculateGapAnalysis(
     topicBreakdown,
     uniqueSolvedMap.size,

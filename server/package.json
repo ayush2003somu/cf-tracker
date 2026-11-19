@@ -7,9 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test:sprint1": "node src/testSprint1.js",
-    "test:sprint2-3": "node src/testSprint2And3.js",
-    "test:api": "node src/testSprint3Api.js"
+    "test": "node src/testApi.js"
   },
   "keywords": [
     "codeforces",

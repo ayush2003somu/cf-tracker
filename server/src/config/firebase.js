@@ -88,14 +88,13 @@ try {
     const app = apps.length > 0 ? apps[0] : initializeApp({ credential });
     db = getFirestore(app);
     isRealFirestore = true;
-    console.log('[Firestore] 🚀 Connected to live Firebase Firestore project.');
+    console.log('Connected to Firebase Firestore');
   } else {
-    console.log('[Firestore] ℹ️  No Firebase credentials configured in .env.');
-    console.log('[Firestore] 💡 Falling back to in-memory Firestore cache store.');
+    console.log('Firebase credentials not configured, using in-memory store');
     db = new InMemoryFirestoreMock();
   }
 } catch (error) {
-  console.warn(`[Firestore] ⚠️  Firebase initialization failed (${error.message}). Falling back to in-memory cache.`);
+  console.warn('Firebase initialization error, using in-memory store:', error.message);
   db = new InMemoryFirestoreMock();
 }
 

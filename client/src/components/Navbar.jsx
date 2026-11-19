@@ -1,11 +1,5 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
 
-/**
- * Navbar Component
- * 
- * Displays title, tagline, and backend status indicator.
- */
 export default function Navbar({ backendOnline }) {
   return (
     <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
@@ -18,7 +12,7 @@ export default function Navbar({ backendOnline }) {
             <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
               Codeforces DSA Profile
               <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
-                AI Coach
+                Analytics
               </span>
             </h1>
             <p className="text-xs text-slate-400 hidden sm:block">
@@ -27,7 +21,6 @@ export default function Navbar({ backendOnline }) {
           </div>
         </div>
 
-        {/* Live Backend Status Badge */}
         <div className="flex items-center space-x-2 text-xs">
           <span
             className={`inline-block h-2 w-2 rounded-full ${
@@ -35,7 +28,7 @@ export default function Navbar({ backendOnline }) {
             }`}
           />
           <span className="text-slate-400 font-medium hidden sm:inline">
-            {backendOnline ? 'Server Online (Port 5001)' : 'Server Offline'}
+            {backendOnline ? 'API Connected' : 'API Offline'}
           </span>
         </div>
       </div>
